@@ -52,7 +52,7 @@ namespace Knives
         private void HealthHaver_OnDamaged(float resultValue, float maxValue, CoreDamageTypes damageTypes, DamageCategory damageCategory, Vector2 damageDirection)
         {
             Za_worldo();
-            throw new NotImplementedException();
+            
         }
 
         public void Za_worldo()

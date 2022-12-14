@@ -6,7 +6,8 @@ using System.Collections;
 using UnityEngine;
 using ItemAPI;
 using System.Reflection;
-
+// for anyone viewing this on github please take note that this is a very prototype version of this kind of "Metered" active item. 
+//I hope to make this an attachable component so suggestions for upgrades are appreciated
 namespace Knives
 {
     class Striker_Pack : PlayerItem

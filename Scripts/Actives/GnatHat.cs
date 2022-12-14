@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -70,28 +70,48 @@ namespace Knives
                 float deminishY = (player.transform.localScale.y * .45f);
                 deminishXmain = deminishX;
                 deminishYmain = deminishY;
+
+
             }
-            this.CanBeDropped = false;
+
+            player.GunChanged += LastOwner_GunChanged;
+
             base.Pickup(player);
         }
 
-        public override void  OnPreDrop(PlayerController user)
+
+        private void LastOwner_GunChanged(Gun arg1, Gun arg2, bool arg3)
         {
             if (toggle == false)
             {
-                RoomHandler room;
-                room = GameManager.Instance.Dungeon.data.GetAbsoluteRoomFromPosition(Vector2Extensions.ToIntVector2(user.CenterPosition, VectorConversions.Round));
-                CellData cellaim = room.GetNearestCellToPosition(user.CenterPosition);
-                CellData cellaimmunis = room.GetNearestCellToPosition(user.CenterPosition - new Vector2(0, 1f));
-
                 
-               
-                if (cellaim.HasWallNeighbor(true, true) == false && cellaimmunis.HasWallNeighbor(true, true) == false)
-                {
-                    this.CanBeDropped = true;
-                    this.DoEffect(user);
-                }
+                arg2.transform.localScale = new Vector3(1, 1, this.LastOwner.transform.localScale.z);
+                arg2.PreventOutlines = true;
+                float GUNdeminishX = (arg1.transform.localScale.x * .45f);
+                float GUNdeminishY = (arg1.transform.localScale.y * .45f);
+                arg1.transform.localScale = new Vector3(GUNdeminishX, GUNdeminishY, this.LastOwner.transform.localScale.z);
+                arg1.PreventOutlines = true;
+
             }
+            else
+            {
+                arg2.PreventOutlines = false;
+                arg1.PreventOutlines = false;
+            }
+           
+
+        }
+
+
+
+        public override void  OnPreDrop(PlayerController user)
+        {
+            if (toggle == false && CanBeUsed(user))
+            {
+                this.DoEffect(user);
+                user.GunChanged -= LastOwner_GunChanged;
+            }
+
 
             base.OnPreDrop(user);
         }
@@ -107,65 +127,85 @@ namespace Knives
             {
                 OrigX = X;
                 OrigY = Y;
-                //ETGModConsole.Log(X.ToString());
-                //ETGModConsole.Log(Y.ToString());
+                
             }
-            
-            
-            //l
-            RoomHandler room;
-            room = GameManager.Instance.Dungeon.data.GetAbsoluteRoomFromPosition(Vector2Extensions.ToIntVector2(user.CenterPosition,VectorConversions.Round));
-            CellData cellaim = room.GetNearestCellToPosition(user.CenterPosition);
-            CellData cellaimmunis = room.GetNearestCellToPosition(user.CenterPosition - new Vector2(0, 1f));
 
-            //if not in or near wall
-           
-
-                // Oh hey there,
-                // I see you looking through my code...
-                // its okay you can stay
-                // we're all friends here.
-                // take whatever you need
-                // alright have a good day,
-                // see you later   
-                //- Skilotar_
+            // Oh hey there,
+            // I see you looking through my code...
+            // its okay you can stay
+            // we're all friends here.
+            // take whatever you need
+            // alright have a good day,
+            // see you later   
+            //- Skilotar_
 
             if (toggle)
             {
-                if (cellaim.HasWallNeighbor(true, true) == false && cellaimmunis.HasWallNeighbor(true, true) == false)
+                if (CanBeUsed(user))
                 {
                     //is vry smol
                     user.transform.localScale = new Vector3(deminishXmain, deminishYmain, user.transform.localScale.z);
                     user.specRigidbody.UpdateCollidersOnScale = true;
                     user.specRigidbody.UpdateColliderPositions();
                     toggle = false;
+                    this.LastOwner.CurrentGun.transform.localScale = new Vector3(deminishXmain, deminishYmain, this.LastOwner.transform.localScale.z);
+                    this.LastOwner.CurrentGun.PreventOutlines = true;
 
-                   
+
                 }
 
             }
-           else
+            else
             {
-                if (cellaim.HasWallNeighbor(true, true) == false && cellaimmunis.HasWallNeighbor(true, true) == false)
+                if (CanBeUsed(user))
                 {
                     //is not vry smol
                     user.transform.localScale = new Vector3(OrigX, OrigY, user.transform.localScale.z);
                     user.specRigidbody.UpdateColliderPositions();
                     toggle = true;
-                    
+                    this.LastOwner.CurrentGun.transform.localScale = new Vector3(1, 1, this.LastOwner.transform.localScale.z);
+                    this.LastOwner.CurrentGun.PreventOutlines = false;
                 }
             }
 
         }
+        public override bool CanBeUsed(PlayerController user)
+        {
 
-        
+            //if not in or near wall
+
+            RoomHandler room;
+            room = GameManager.Instance.Dungeon.data.GetAbsoluteRoomFromPosition(Vector2Extensions.ToIntVector2(user.CenterPosition, VectorConversions.Round));
+            CellData cellaim = room.GetNearestCellToPosition(user.CenterPosition);
+            CellData cellaimmunis = room.GetNearestCellToPosition(user.CenterPosition - new Vector2(0, 1f));
+            if (cellaim.HasWallNeighbor(true, true) == false && cellaimmunis.HasWallNeighbor(true, true) == false)
+            {
+                return base.CanBeUsed(user) && true;
+            }
+            else
+            {
+                return base.CanBeUsed(user) && false;
+            }
+
+        }
+
         public override void Update()
         {
 
             if (this.LastOwner != null)
             {
+
+                if (CanBeUsed(this.LastOwner))
+                {
+                    this.CanBeDropped = true;
+                }
+                else
+                {
+                    this.CanBeDropped = false;
+                }
                 if (toggle == false)
                 {
+
                     foreach (var projectile in GetBullets())
                     {
                         projectile.BecomeBlackBullet();
@@ -191,13 +231,12 @@ namespace Knives
                 {
                     this.LastOwner.CurrentGun.transform.localScale = new Vector3(deminishXmain, deminishYmain, this.LastOwner.transform.localScale.z);
                     
-                    this.removeAllOutlines();
 
                 }
                 else
                 {
                     this.LastOwner.CurrentGun.transform.localScale =  new Vector3(1, 1, this.LastOwner.transform.localScale.z);
-                    
+                   
                 }
 
             }
@@ -206,14 +245,7 @@ namespace Knives
             base.Update();
 
         }
-        public void removeAllOutlines()
-        {
-            foreach(Gun gun in this.LastOwner.inventory.AllGuns)
-            {
-                
-                gun.PreventOutlines = true;
-            }
-        }
+
       
         private List<Projectile> GetBullets()
         {
@@ -271,6 +303,8 @@ namespace Knives
             }
             this.passiveStatModifiers = newModifiers.ToArray();
         }
-    
+       
     }
+
+   
 }
